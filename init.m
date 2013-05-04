@@ -3,7 +3,7 @@ function init()
     
     clear all; close all; clc;
     initPlot();
-    robot = initRobot(10, 10, 0);
+    robot = initRobot(10, 10, pi/3);
     plotRobot(robot);
 end
 
