@@ -6,10 +6,7 @@ function init()
     robot = initRobot(10, 10, random(-pi/2, pi/2));
     plotRobot(robot);
     
-    phi = robot(2, 1); % angulo atual do robo
-    teta = random(-pi/6, pi/6); % depende da regra fuzzy
-    robot = moveRobot(robot, phi + teta); % movimenta o robo
-    plotRobot(robot); % plota o robo
+    start(robot);
 end
 
 function initPlot()
@@ -39,4 +36,20 @@ function [r] = random(min, max)
     %@return valor aleatorio no intervalo [@min, @max]
     
     r = min + (max-(min)) .* rand();
+end
+
+function start(robot)
+    %Inicia a simulacao
+    %@param robot: o robo
+    
+    step = 0;
+    while step < 10
+        phi = robot(2, 1); % angulo atual do robo
+        teta = random(-pi/6, pi/6); % depende da regra fuzzy
+        robot = moveRobot(robot, phi + teta); % movimenta o robo
+        plotRobot(robot); % plota o robo
+        
+        pause(0.5); % aguarda por 500ms
+        step = step + 1;
+    end
 end
