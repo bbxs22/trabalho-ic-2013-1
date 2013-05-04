@@ -5,6 +5,11 @@ function init()
     initPlot();   
     robot = initRobot(10, 10, random(-pi/2, pi/2));
     plotRobot(robot);
+    
+    phi = robot(2, 1); % angulo atual do robo
+    teta = random(-pi/6, pi/6); % depende da regra fuzzy
+    robot = moveRobot(robot, phi + teta); % movimenta o robo
+    plotRobot(robot); % plota o robo
 end
 
 function initPlot()
