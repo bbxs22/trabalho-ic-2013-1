@@ -3,7 +3,8 @@ function init()
     
     clear all; close all; clc;
     initPlot();
-    plotCircle(10, 10, 3, 'b');
+    robot = initRobot(10, 10, 0);
+    plotRobot(robot);
 end
 
 function initPlot()
@@ -13,4 +14,14 @@ function initPlot()
     
     xlim([0 50]);
     ylim([-20 20]);
+end
+
+function [robot] = initRobot(x, y, angle)
+    %Inicializa o robo
+    %@param x: posicao inicial do robo no eixo x
+    %@param y: posicao inicial do robo no eixo y
+    %@param angle: angulo inicial de visao do robo (em radianos)
+    
+    step = [12 12]; %passo dado pelo robo no movimento (x, y)
+    robot = [[x, y]; [angle 0]; step];
 end
