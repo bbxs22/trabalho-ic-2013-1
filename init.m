@@ -5,6 +5,8 @@ function init()
     initPlot();   
     robot = initRobot(10, 10, random(-pi/2, pi/2));
     plotRobot(robot);
+    obstacles = initObstacles(5);
+    plotObstacles(obstacles);
     
     start(robot);
 end
@@ -27,6 +29,19 @@ function [robot] = initRobot(x, y, angle)
     
     step = [12 12]; %passo dado pelo robo no movimento (x, y)
     robot = [[x, y]; [angle 0]; step];
+end
+
+function [obstacles] = initObstacles(total)
+    %Inicializa obstaculos em posicoes aleatorias (definidas por xlim para
+    %eixo x e ylim para eixo y)
+    %@param total: quantidade de obstaculos a serem gerados
+    %@return matriz de obstaculos (de tamanho total x 2)
+    
+    obstacles = zeros(total, 2);
+    maxX = xlim;
+    maxY = ylim;
+    obstacles(:, 1) = randi(maxX, total, 1);
+    obstacles(:, 2) = randi(maxY, total, 1);
 end
 
 function [r] = random(min, max)
