@@ -68,3 +68,15 @@ function start(robot)
         step = step + 1;
     end
 end
+
+function [minDistance] = minDistance(robot, obstacles)
+    %Calcula a distancia para o obstaculo mais proximo
+    %@param robot: o robo
+    %@param obstacles: obstaculos que estao no campo de visao do robo
+    %@return a distancia para o obstaculo mais proximo
+    
+    position = repmat(robot(1, :), size(obstacles, 1), 1);
+    aux = (position - obstacles) .* (position - obstacles);
+    distances = sqrt(aux(:, 1) + aux(:, 2));
+    minDistance = min(distances);
+end
