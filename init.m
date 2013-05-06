@@ -2,13 +2,13 @@ function init()
     %Inicializa o programa
     
     clear all; close all; clc;
-    initPlot();   
-    robot = initRobot(10, 10, random(-pi/2, pi/2));
-    plotRobot(robot);
+    %initPlot();   
+    %robot = initRobot(10, 10, random(-pi/2, pi/2));
+    %plotRobot(robot);
     obstacles = initObstacles(5);
-    plotObstacles(obstacles);
+    %plotObstacles(obstacles);
     
-    start(robot);
+    %start(robot);
 end
 
 function initPlot()
@@ -38,10 +38,33 @@ function [obstacles] = initObstacles(total)
     %@return matriz de obstaculos (de tamanho total x 2)
     
     obstacles = zeros(total, 2);
-    maxX = xlim;
-    maxY = ylim;
-    obstacles(:, 1) = randi(maxX, total, 1);
-    obstacles(:, 2) = randi(maxY, total, 1);
+    %Criando o primeiro par de posicoes
+    x1 = randi([50, 197], 1);
+    y1 = randi([3, 97], 1);
+    obstacles(1, :) = [x1, y1];
+    
+    %Gerando novos x,y sem que colidam com os anteriores
+    for i = 2 : 1 : total
+       collision = true;
+       x = randi([50, 197], 1);
+       y = randi([3, 97], 1);
+       
+       while collision
+           for j = 1 : 1 : i - 1
+               xj = obstacles(j, 1);
+               yj = obstacles(j, 2);
+               if (xj - 3 <= x) && (x <= xj + 3) && (yj - 3 <= y) && (y <= yj + 3)
+                   x = randi([50, 197], 1);
+                   y = randi([3, 97], 1);
+                   break
+               else
+                  collision = false; 
+               end
+           end
+       end
+       
+       obstacles(i, :) = [x, y];
+    end
 end
 
 function [r] = random(min, max)
