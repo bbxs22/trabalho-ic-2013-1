@@ -2,13 +2,14 @@ function init()
     %Inicializa o programa
     
     clear all; close all; clc;
-    %initPlot();   
-    %robot = initRobot(10, 10, random(-pi/2, pi/2));
-    %plotRobot(robot);
+    fis = readfis('robot');
+    initPlot();   
+    robot = initRobot(10, 10, random(-pi/2, pi/2));
+    plotRobot(robot);
     obstacles = initObstacles(5);
-    %plotObstacles(obstacles);
+    plotObstacles(obstacles);
     
-    %start(robot);
+    start(robot, fis);
 end
 
 function initPlot()
@@ -27,7 +28,7 @@ function [robot] = initRobot(x, y, angle)
     %@param angle: angulo inicial de visao do robo (em radianos)
     %@return o robo
     
-    step = [12 12]; %passo dado pelo robo no movimento (x, y)
+    step = [1 1]; %passo dado pelo robo no movimento (x, y)
     robot = [[x, y]; [angle 0]; step];
 end
 
@@ -76,20 +77,30 @@ function [r] = random(min, max)
     r = min + (max-(min)) .* rand();
 end
 
-function start(robot)
+function start(robot, fis)
     %Inicia a simulacao
     %@param robot: o robo
     
     step = 0;
     while step < 10
-        phi = robot(2, 1); % angulo atual do robo
-        teta = random(-pi/6, pi/6); % depende da regra fuzzy
-        robot = moveRobot(robot, phi + teta); % movimenta o robo
+        phi = robot(2, 1) % angulo atual do robo
+        yr = robot(1,2) % yr do robo
+        d = 10;
+        teta = evalfis([radtodeg(phi), d, yr], fis) % depende da regra fuzzy
+        robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
         plotRobot(robot); % plota o robo
         
         pause(0.5); % aguarda por 500ms
         step = step + 1;
     end
+end
+
+function [degrees] = radtodeg(radians)
+    degrees = 180 * radians / pi;
+end
+
+function [radians] = degtorad(degrees)
+    radians = degrees * pi / 180;
 end
 
 function [minDistance] = minDistance(robot, obstacles)

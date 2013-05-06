@@ -14,3 +14,9 @@ As melhorias podem ser de qualquer tipo, por exemplo:
 *Importante:* Deve ser possível acompanhar o robô navegando pelo método original e o modificado.
 
 O problema que surge naturalmente é como testar o sistema (e as possíveis melhorias). Uma sugestão é medir a taxa de acertos do sistema, onde taxa de acerto é o número de vezes que o sistema conseguiu fazer o robô chegar ao destino esperado.
+
+#Todo
+- Condição de parada
+- Calcular a distância para o próximo obstáculo observando o campo de visão do robo
+- Alterar o passo (diminuir o delta)
+- Fazer output dos resultados num txt, xml, etc
