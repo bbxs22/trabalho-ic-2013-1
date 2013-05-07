@@ -9,7 +9,7 @@ function init()
     obstacles = initObstacles(5);
     plotObstacles(obstacles);
     
-    start(robot, fis);
+    start(robot, obstacles,  fis);
 end
 
 function initPlot()
@@ -28,7 +28,7 @@ function [robot] = initRobot(x, y, angle)
     %@param angle: angulo inicial de visao do robo (em radianos)
     %@return o robo
     
-    step = [1 1]; %passo dado pelo robo no movimento (x, y)
+    step = [3 3]; %passo dado pelo robo no movimento (x, y)
     robot = [[x, y]; [angle 0]; step];
 end
 
@@ -77,22 +77,38 @@ function [r] = random(min, max)
     r = min + (max-(min)) .* rand();
 end
 
-function start(robot, fis)
+function start(robot, obstacles, fis)
     %Inicia a simulacao
     %@param robot: o robo
     
     step = 0;
-    while step < 10
-        phi = robot(2, 1) % angulo atual do robo
-        yr = robot(1,2) % yr do robo
-        d = 10;
-        teta = evalfis([radtodeg(phi), d, yr], fis) % depende da regra fuzzy
+    while step < 100
+        phi = robot(2, 1); % angulo atual do robo
+        yr = robot(1,2); % yr do robo
+        d = minDistance(robot, getVisibleObstacles(robot, obstacles));
+        teta = evalfis([radtodeg(phi), d, yr], fis); % depende da regra fuzzy
         robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
         plotRobot(robot); % plota o robo
         
         pause(0.5); % aguarda por 500ms
         step = step + 1;
     end
+end
+
+function [visibleObstacles] = getVisibleObstacles(robot, obstacles) 
+    visibleObstacles = [];
+    for i = 1 : 1 : size(obstacles, 1)
+        if obstacles(i, 1) >= robot(1,1)
+            y1 = tan(robot(2,1)) * (obstacles(i,1) - robot(1,1)) + robot(1,2) - 9; 
+            y2 = tan(robot(2,1)) * (obstacles(i,1) - robot(1,1)) + robot(1,2) + 9;
+            
+            if y1 <= obstacles(i,2)&& obstacles(i,2) <= y2
+                visibleObstacles = cat(1, visibleObstacles, obstacles(i,:));
+            end
+        end
+    end
+    
+    disp(visibleObstacles)
 end
 
 function [degrees] = radtodeg(radians)
@@ -109,8 +125,12 @@ function [minDistance] = minDistance(robot, obstacles)
     %@param obstacles: obstaculos que estao no campo de visao do robo
     %@return a distancia para o obstaculo mais proximo
     
-    position = repmat(robot(1, :), size(obstacles, 1), 1);
-    aux = (position - obstacles) .* (position - obstacles);
-    distances = sqrt(aux(:, 1) + aux(:, 2));
-    minDistance = min(distances);
+    if size(obstacles, 1) == 0
+        minDistance = 200;
+    else
+        position = repmat(robot(1, :), size(obstacles, 1), 1);
+        aux = (position - obstacles) .* (position - obstacles);
+        distances = sqrt(aux(:, 1) + aux(:, 2));
+        minDistance = min(distances);
+    end
 end
