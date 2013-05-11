@@ -1,12 +1,9 @@
 function plotRobot(robot)
-    %Plota uma circunferencia (robo) de raio 6 com a direcao de observacao
+    %Plota uma circunferencia (robo) com a direcao de observacao
     %@param robot o robo
     
-    x = robot(1, 1);
-    y = robot(1, 2);
-    angle = robot(2, 1);
-    plotCircle(x, y, 6, 'b');
-    plotDirection(x, y, angle);
+    plotCircle(robot.x, robot.y, robot.radius, 'b');
+    plotDirection(robot.x, robot.y, robot.angle);
 end
 
 function plotDirection(x, y, angle)

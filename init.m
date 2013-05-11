@@ -28,21 +28,32 @@ function [robot] = initRobot(x, y, angle)
     %@param angle: angulo inicial de visao do robo (em radianos)
     %@return o robo
     
-    step = [3 3]; %passo dado pelo robo no movimento (x, y)
-    robot = [[x, y]; [angle 0]; step];
+    robot.x = x;
+    robot.y = y;
+    robot.radius = 6;
+    robot.angle = angle;
+    robot.stepX = 3; %passo dado pelo robo no movimento (x, y)
+    robot.stepY = 3; %passo dado pelo robo no movimento (x, y)
 end
 
 function [obstacles] = initObstacles(total)
     %Inicializa obstaculos em posicoes aleatorias (definidas por xlim para
     %eixo x e ylim para eixo y)
     %@param total: quantidade de obstaculos a serem gerados
-    %@return matriz de obstaculos (de tamanho total x 2)
+    %@return matriz de obstaculos (1 x total)
     
-    obstacles = zeros(total, 2);
+    rangeX = [50, 197];
+    rangeY = [3, 97];
+    
+    %Inicializando a estrutura
+    obstacles(total).x = 0;
+    obstacles(total).y = 0;
+    obstacles(total).radius = 0;
+    
     %Criando o primeiro par de posicoes
-    x1 = randi([50, 197], 1);
-    y1 = randi([3, 97], 1);
-    obstacles(1, :) = [x1, y1];
+    obstacles(1).x = randi(rangeX, 1);
+    obstacles(1).y = randi(rangeY, 1);
+    obstacles(1).radius = 3;
     
     %Gerando novos x,y sem que colidam com os anteriores
     for i = 2 : 1 : total
@@ -52,11 +63,11 @@ function [obstacles] = initObstacles(total)
        
        while collision
            for j = 1 : 1 : i - 1
-               xj = obstacles(j, 1);
-               yj = obstacles(j, 2);
+               xj = obstacles(j).x;
+               yj = obstacles(j).y;
                if (xj - 3 <= x) && (x <= xj + 3) && (yj - 3 <= y) && (y <= yj + 3)
-                   x = randi([50, 197], 1);
-                   y = randi([3, 97], 1);
+                   x = randi(rangeX, 1);
+                   y = randi(rangeY, 1);
                    break
                else
                   collision = false; 
@@ -64,7 +75,9 @@ function [obstacles] = initObstacles(total)
            end
        end
        
-       obstacles(i, :) = [x, y];
+       obstacles(i).x = x;
+       obstacles(i).y = y;
+       obstacles(i).radius = 3;
     end
 end
 
@@ -74,7 +87,7 @@ function [r] = random(min, max)
     %@param max: valor maximo
     %@return valor aleatorio no intervalo [@min, @max]
     
-    r = min + (max-(min)) .* rand();
+    r = min + (max - min) .* rand();
 end
 
 function start(robot, obstacles, fis)
@@ -83,8 +96,8 @@ function start(robot, obstacles, fis)
     
     step = 0;
     while step < 100
-        phi = robot(2, 1); % angulo atual do robo
-        yr = robot(1,2); % yr do robo
+        phi = robot.angle; % angulo atual do robo
+        yr = robot.y; % yr do robo
         d = minDistance(robot, getVisibleObstacles(robot, obstacles));
         teta = evalfis([radtodeg(phi), d, yr], fis); % depende da regra fuzzy
         robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
@@ -96,14 +109,19 @@ function start(robot, obstacles, fis)
 end
 
 function [visibleObstacles] = getVisibleObstacles(robot, obstacles) 
+    %Separa os obstaculos visiveis pelo robo
+    %@param robot: o robo
+    %@param obstacles: obstaculos
+    %@return obstaculos visiveis
+    
     visibleObstacles = [];
     for i = 1 : 1 : size(obstacles, 1)
-        if obstacles(i, 1) >= robot(1,1)
-            y1 = tan(robot(2,1)) * (obstacles(i,1) - robot(1,1)) + robot(1,2) - 9; 
-            y2 = tan(robot(2,1)) * (obstacles(i,1) - robot(1,1)) + robot(1,2) + 9;
+        if obstacles(i).x >= robot.x
+            y1 = tan(robot.angle) * (obstacles(i).x - robot.x) + robot.y - 9; 
+            y2 = tan(robot.angle) * (obstacles(i).x - robot.x) + robot.y + 9;
             
-            if y1 <= obstacles(i,2)&& obstacles(i,2) <= y2
-                visibleObstacles = cat(1, visibleObstacles, obstacles(i,:));
+            if y1 <= obstacles(i).y && obstacles(i).y <= y2
+                visibleObstacles = cat(1, visibleObstacles, obstacles(i));
             end
         end
     end
@@ -112,10 +130,18 @@ function [visibleObstacles] = getVisibleObstacles(robot, obstacles)
 end
 
 function [degrees] = radtodeg(radians)
+    %Converte um angulo em radianos para graus
+    %@param radians: angulo em radianos
+    %@return angulo em graus
+    
     degrees = 180 * radians / pi;
 end
 
 function [radians] = degtorad(degrees)
+    %Converte um angulo em graus para radianos
+    %@param degrees: angulo em graus
+    %@return angulo em radianos
+    
     radians = degrees * pi / 180;
 end
 
@@ -128,9 +154,31 @@ function [minDistance] = minDistance(robot, obstacles)
     if size(obstacles, 1) == 0
         minDistance = 200;
     else
-        position = repmat(robot(1, :), size(obstacles, 1), 1);
-        aux = (position - obstacles) .* (position - obstacles);
-        distances = sqrt(aux(:, 1) + aux(:, 2));
+        distances = calculateDistance(robot, obstacles);
         minDistance = min(distances);
     end
+end
+
+function [x] = detectCollision(robot, obstacles)
+    %Determina se houve colisao entre o robo e um conjunto de obstaculos e
+    %entre o robo e a parede
+    %@param robot: o robo
+    %@param obstacles: obstaculos
+    %@return se houve ou nao colisao
+    
+    distances = calculateDistance(robot, obstacles);   
+    distances = distances - ([obstacles(1, :).radius] + robot.radius * ones(1, size(distances, 2)));
+    x = length(find(distances < 0)) > 1 || robot.y + robot.radius < 0 || robot.y + robot.radius > 100;
+end
+
+function [distances] = calculateDistance(robot, obstacles)
+    %Calcula a distancia entre o robo e cada um dos obstaculos
+    %@param robot: o robo
+    %@param obstacles: obstaculos
+    %@return vetor coluna com a distancia entre o robo e o obstaculo
+    
+    position = repmat([robot.x robot.y], size(obstacles, 2), 1);
+    obst = [obstacles(1, :).x; obstacles(1, :).y]';
+    aux = (position - obst) .* (position - obst);
+    distances = sqrt(aux(:, 1) + aux(:, 2))';
 end

@@ -4,7 +4,8 @@ function [robot] = moveRobot(robot, newAngle)
     %@param newAngle angulo no qual o robo se encontra apos o movimento
     %@return o robo com dados atualizados
     
-    newPosition = robot(1, :) + robot(3, :) .* [cos(newAngle) sin(newAngle)];
-    robot(1, :) = newPosition;
-    robot(2, :) = [newAngle 0];
+    newPosition = [robot.x robot.y] + [robot.stepX robot.stepY] .* [cos(newAngle) sin(newAngle)];
+    robot.x = newPosition(1);
+    robot.y = newPosition(2);
+    robot.angle = newAngle;
 end
