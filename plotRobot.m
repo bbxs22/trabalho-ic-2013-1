@@ -4,6 +4,7 @@ function plotRobot(robot)
     
     plotCircle(robot.x, robot.y, robot.radius, 'b');
     plotDirection(robot.x, robot.y, robot.angle);
+    %plotVision(robot);
 end
 
 function plotDirection(x, y, angle)
@@ -26,4 +27,17 @@ function plotDirection(x, y, angle)
     yPlot = 2 * sin(angle);
     hold on
     plot(x + xPlot, y + yPlot, 'r');
+end
+
+function plotVision(robot)
+    line1 = [robot.x, robot.y] + robot.radius*[cos(robot.angle + pi/2), sin(robot.angle + pi/2)];
+    line2 = [robot.x, robot.y] + robot.radius*[cos(robot.angle - pi/2), sin(robot.angle - pi/2)];
+    
+    x = 0 : 1 : 200;
+    y1 = tan(robot.angle) * x - tan(robot.angle) * line1(1) + line1(2);
+    y2 = tan(robot.angle) * x - tan(robot.angle) * line2(1) + line2(2);
+    
+    hold on
+    plot(x, y1, 'g');
+    plot(x, y2, 'g');
 end
