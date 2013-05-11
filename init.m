@@ -28,12 +28,18 @@ function [robot] = initRobot(x, y, angle)
     %@param angle: angulo inicial de visao do robo (em radianos)
     %@return o robo
     
-    robot.x = x;
-    robot.y = y;
+    robot.start.x = x;
+    robot.start.y = y;
+    robot.start.angle = angle;
+    robot.start.stepX = 3;
+    robot.start.stepY = 3;
+    
+    robot.x = robot.start.x;
+    robot.y = robot.start.y;
     robot.radius = 6;
-    robot.angle = angle;
-    robot.stepX = 3; %passo dado pelo robo no movimento (x, y)
-    robot.stepY = 3; %passo dado pelo robo no movimento (x, y)
+    robot.angle = robot.start.angle;
+    robot.stepX = robot.start.stepX; %passo dado pelo robo no movimento (x, y)
+    robot.stepY = robot.start.stepY; %passo dado pelo robo no movimento (x, y)
 end
 
 function [obstacles] = initObstacles(total)
@@ -94,8 +100,14 @@ function start(robot, obstacles, fis)
     %Inicia a simulacao
     %@param robot: o robo
     
+    collision = false;
     step = 0;
-    while ~detectCollision(robot, obstacles) && robot.x < 200
+    while robot.x < 200
+        if (detectCollision(robot, obstacles))
+            collision = true;
+            break;
+        end
+        
         phi = robot.angle; % angulo atual do robo
         yr = robot.y; % yr do robo
         d = minDistance(robot, getVisibleObstacles(robot, obstacles));
@@ -106,6 +118,8 @@ function start(robot, obstacles, fis)
         pause(0.5); % aguarda por 500ms
         step = step + 1;
     end
+    
+    showStats(robot, obstacles, collision, step);
 end
 
 function [visibleObstacles] = getVisibleObstacles(robot, obstacles) 
@@ -174,7 +188,7 @@ function [x] = detectCollision(robot, obstacles)
     
     distances = calculateDistance(robot, obstacles);   
     distances = distances - ([obstacles(1, :).radius] + robot.radius * ones(1, size(distances, 2)));
-    x = length(find(distances < 0)) > 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100;
+    x = length(find(distances < 0)) >= 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100;
 end
 
 function [distances] = calculateDistance(robot, obstacles)
