@@ -95,7 +95,7 @@ function start(robot, obstacles, fis)
     %@param robot: o robo
     
     step = 0;
-    while step < 100
+    while ~detectCollision(robot, obstacles) && robot.x < 200
         phi = robot.angle; % angulo atual do robo
         yr = robot.y; % yr do robo
         d = minDistance(robot, getVisibleObstacles(robot, obstacles));
@@ -115,18 +115,24 @@ function [visibleObstacles] = getVisibleObstacles(robot, obstacles)
     %@return obstaculos visiveis
     
     visibleObstacles = [];
-    for i = 1 : 1 : size(obstacles, 1)
+    for i = 1 : 1 : size(obstacles, 2)
         if obstacles(i).x >= robot.x
-            y1 = tan(robot.angle) * (obstacles(i).x - robot.x) + robot.y - 9; 
-            y2 = tan(robot.angle) * (obstacles(i).x - robot.x) + robot.y + 9;
+            line1 = [robot.x, robot.y] + robot.radius*[cos(robot.angle + pi/2), sin(robot.angle + pi/2)];
+            line2 = [robot.x, robot.y] + robot.radius*[cos(robot.angle - pi/2), sin(robot.angle - pi/2)];
+            y1 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line1(1) + line1(2);
+            y2 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line2(1) + line2(2);
             
-            if y1 <= obstacles(i).y && obstacles(i).y <= y2
-                visibleObstacles = cat(1, visibleObstacles, obstacles(i));
+            % verifica se o obstaculo possui o centro dentro da regiao
+            if min(y1, y2) <= obstacles(i).y && obstacles(i).y <= max(y1, y2)
+                visibleObstacles = cat(2, visibleObstacles, obstacles(i));
+            % verifica se alguma das retas de visao intercepta o obstaculo
+            else
+                if abs(obstacles(i).y - min(y1, y2)) <= obstacles(i).radius || abs(obstacles(i).y - max(y1, y2)) <= obstacles(i).radius
+                    visibleObstacles = cat(2, visibleObstacles, obstacles(i));
+                end
             end
         end
     end
-    
-    disp(visibleObstacles)
 end
 
 function [degrees] = radtodeg(radians)
@@ -168,7 +174,7 @@ function [x] = detectCollision(robot, obstacles)
     
     distances = calculateDistance(robot, obstacles);   
     distances = distances - ([obstacles(1, :).radius] + robot.radius * ones(1, size(distances, 2)));
-    x = length(find(distances < 0)) > 1 || robot.y + robot.radius < 0 || robot.y + robot.radius > 100;
+    x = length(find(distances < 0)) > 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100;
 end
 
 function [distances] = calculateDistance(robot, obstacles)
