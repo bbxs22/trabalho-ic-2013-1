@@ -3,13 +3,39 @@ function init()
     
     clear all; close all; clc;
     fis = readfis('robot');
-    initPlot();   
-    robot = initRobot(10, 10, random(-pi/2, pi/2));
-    plotRobot(robot);
-    obstacles = initObstacles(5);
-    plotObstacles(obstacles);
+    mean.collisionSum = 0;
+    mean.collision = 0;
+    mean.stepsSum = 0;
+    mean.steps = 0;
+    standardDeviation.helper.collision.x2 = 0;
+    standardDeviation.helper.steps.x2 = 0;
+    standardDeviation.collision = 0;
+    standardDeviation.steps = 0;
+    trials = 300;
     
-    start(robot, obstacles,  fis);
+    for i = 1:1:trials
+        robot = initRobot(10, 10, pi/4);
+        obstacles = initObstacles(5);
+        stats = start(robot, obstacles, fis);
+        mean.collisionSum = mean.collisionSum + stats.collision;
+        mean.stepsSum = mean.stepsSum + stats.steps;
+        standardDeviation.helper.collision.x2 = standardDeviation.helper.collision.x2 + (stats.collision ^ 2);
+        standardDeviation.helper.steps.x2 = standardDeviation.helper.steps.x2 + (stats.steps ^ 2);
+    end
+    
+    stepsTrials = trials - mean.collisionSum;
+    mean.steps = mean.stepsSum / stepsTrials;
+    mean.collision = mean.collisionSum / trials;
+    mean
+    
+    % collision
+    standardDeviation.collision = ((mean.collision ^ 2) * trials) + (standardDeviation.helper.collision.x2) - (2 * mean.collision * mean.collisionSum);
+    standardDeviation.collision = sqrt(standardDeviation.collision / (trials - 1));
+    
+    % steps
+    standardDeviation.steps = ((mean.steps ^ 2) * stepsTrials) + (standardDeviation.helper.steps.x2) - (2 * mean.steps * mean.stepsSum);
+    standardDeviation.steps = sqrt(standardDeviation.steps / (stepsTrials - 1));
+    standardDeviation
 end
 
 function initPlot()
@@ -96,7 +122,7 @@ function [r] = random(min, max)
     r = min + (max - min) .* rand();
 end
 
-function start(robot, obstacles, fis)
+function [stats] = start(robot, obstacles, fis)
     %Inicia a simulacao
     %@param robot: o robo
     
@@ -113,13 +139,16 @@ function start(robot, obstacles, fis)
         d = minDistance(robot, getVisibleObstacles(robot, obstacles));
         teta = evalfis([radtodeg(phi), d, yr], fis); % depende da regra fuzzy
         robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
-        plotRobot(robot); % plota o robo
-        
-        pause(0.5); % aguarda por 500ms
         step = step + 1;
     end
     
-    showStats(robot, obstacles, collision, step);
+    stats.collision = collision;
+    
+    if collision
+        stats.steps = 0;
+    else    
+        stats.steps = step;
+    end;
 end
 
 function [visibleObstacles] = getVisibleObstacles(robot, obstacles) 
