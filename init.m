@@ -5,6 +5,13 @@ function init()
     fis = readfis('robot');
     trials = 300;
     initPlot();
+    numObstacles = 5;
+    allObstacles = [];
+    
+    for i = 1:trials
+        obstacles = initObstacles(numObstacles);
+        allObstacles = [allObstacles, obstacles];
+    end
     
     for v = [0.5 1 2 3]
         
@@ -18,7 +25,7 @@ function init()
         standardDeviation.steps = 0;
         
         for i = 1:1:trials
-            obstacles = initObstacles(5);
+            obstacles = allObstacles((numObstacles * (i - 1) + 1) : numObstacles * i);
             robot = initRobot(50, 10, 0, v);
             stats = start(robot, obstacles, fis);
             mean.collisionSum = mean.collisionSum + stats.collision;
