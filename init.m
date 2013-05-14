@@ -3,39 +3,47 @@ function init()
     
     clear all; close all; clc;
     fis = readfis('robot');
-    mean.collisionSum = 0;
-    mean.collision = 0;
-    mean.stepsSum = 0;
-    mean.steps = 0;
-    standardDeviation.helper.collision.x2 = 0;
-    standardDeviation.helper.steps.x2 = 0;
-    standardDeviation.collision = 0;
-    standardDeviation.steps = 0;
     trials = 300;
+    initPlot();
     
-    for i = 1:1:trials
-        robot = initRobot(10, 10, pi/4);
-        obstacles = initObstacles(5);
-        stats = start(robot, obstacles, fis);
-        mean.collisionSum = mean.collisionSum + stats.collision;
-        mean.stepsSum = mean.stepsSum + stats.steps;
-        standardDeviation.helper.collision.x2 = standardDeviation.helper.collision.x2 + (stats.collision ^ 2);
-        standardDeviation.helper.steps.x2 = standardDeviation.helper.steps.x2 + (stats.steps ^ 2);
+    for v = [0.5 1 2 3]
+        
+        mean.collisionSum = 0;
+        mean.collision = 0;
+        mean.stepsSum = 0;
+        mean.steps = 0;
+        standardDeviation.helper.collision.x2 = 0;
+        standardDeviation.helper.steps.x2 = 0;
+        standardDeviation.collision = 0;
+        standardDeviation.steps = 0;
+        
+        for i = 1:1:trials
+            obstacles = initObstacles(5);
+            robot = initRobot(50, 10, 0, v);
+            stats = start(robot, obstacles, fis);
+            mean.collisionSum = mean.collisionSum + stats.collision;
+            mean.stepsSum = mean.stepsSum + stats.steps;
+            standardDeviation.helper.collision.x2 = standardDeviation.helper.collision.x2 + (stats.collision ^ 2);
+            standardDeviation.helper.steps.x2 = standardDeviation.helper.steps.x2 + (stats.steps ^ 2);
+        end
+    
+        stepsTrials = trials - mean.collisionSum;
+        mean.steps = mean.stepsSum / stepsTrials;
+        mean.collision = mean.collisionSum / trials;
+        mean
+
+        % collision
+        standardDeviation.collision = ((mean.collision ^ 2) * trials) + (standardDeviation.helper.collision.x2) - (2 * mean.collision * mean.collisionSum);
+        standardDeviation.collision = sqrt(standardDeviation.collision / (trials - 1));
+
+        % steps
+        standardDeviation.steps = ((mean.steps ^ 2) * stepsTrials) + (standardDeviation.helper.steps.x2) - (2 * mean.steps * mean.stepsSum);
+        standardDeviation.steps = sqrt(standardDeviation.steps / (stepsTrials - 1));
+        standardDeviation
+        
+        hold on
+        plot (v, mean.collision, 'x')
     end
-    
-    stepsTrials = trials - mean.collisionSum;
-    mean.steps = mean.stepsSum / stepsTrials;
-    mean.collision = mean.collisionSum / trials;
-    mean
-    
-    % collision
-    standardDeviation.collision = ((mean.collision ^ 2) * trials) + (standardDeviation.helper.collision.x2) - (2 * mean.collision * mean.collisionSum);
-    standardDeviation.collision = sqrt(standardDeviation.collision / (trials - 1));
-    
-    % steps
-    standardDeviation.steps = ((mean.steps ^ 2) * stepsTrials) + (standardDeviation.helper.steps.x2) - (2 * mean.steps * mean.stepsSum);
-    standardDeviation.steps = sqrt(standardDeviation.steps / (stepsTrials - 1));
-    standardDeviation
 end
 
 function initPlot()
@@ -43,11 +51,11 @@ function initPlot()
     %Eixo x de 0 a 200
     %Eixo y de 0 a 100
     
-    xlim([0 200]);
-    ylim([0 100]);
+    xlim([0 3]);
+    ylim([0 1]);
 end
 
-function [robot] = initRobot(x, y, angle)
+function [robot] = initRobot(x, y, angle, v)
     %Inicializa o robo
     %@param x: posicao inicial do robo no eixo x
     %@param y: posicao inicial do robo no eixo y
@@ -57,8 +65,8 @@ function [robot] = initRobot(x, y, angle)
     robot.start.x = x;
     robot.start.y = y;
     robot.start.angle = angle;
-    robot.start.stepX = 3;
-    robot.start.stepY = 3;
+    robot.start.stepX = v;
+    robot.start.stepY = v;
     
     robot.x = robot.start.x;
     robot.y = robot.start.y;
