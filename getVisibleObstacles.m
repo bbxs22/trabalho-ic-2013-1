@@ -8,8 +8,8 @@ function [visibleObstacles] = getVisibleObstacles(robot, obstacles)
     for i = 1 : 1 : size(obstacles, 2)
         angle = calculateAngle(robot, obstacles(i));
         if 0 <= angle && angle <= pi/2 % verifica se o obstaculo esta "na frente" do robo
-            line1 = [robot.x, robot.y] + (robot.radius+10)*[cos(robot.angle + pi/2), sin(robot.angle + pi/2)];
-            line2 = [robot.x, robot.y] + (robot.radius+10)*[cos(robot.angle - pi/2), sin(robot.angle - pi/2)];
+            line1 = [robot.x, robot.y] + (robot.radius)*[cos(robot.angle + pi/2), sin(robot.angle + pi/2)];
+            line2 = [robot.x, robot.y] + (robot.radius)*[cos(robot.angle - pi/2), sin(robot.angle - pi/2)];
             y1 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line1(1) + line1(2);
             y2 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line2(1) + line2(2);
             
