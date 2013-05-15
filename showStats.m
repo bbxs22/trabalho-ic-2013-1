@@ -1,4 +1,4 @@
-function showStats(robot, obstacles, collision, step)
+function showStats(robot, obstacles, collision, step, visibleObstacles)
     fprintf('-- Robo --------------\n')
     fprintf('[X, Y]: %f, %f\n', robot.start.x, robot.start.y)
     fprintf('Phi: %f\n', robot.start.angle)
@@ -16,4 +16,8 @@ function showStats(robot, obstacles, collision, step)
     %fprintf('[stepX, stepY]: %f\n', robot.stepX, robot.stepY)
     fprintf('Total de passos %d\n', step)
     fprintf('Colidiu? %d\n', collision)
+    fprintf('Visible obstacles\n')
+    for i = 1 : 1 : size(visibleObstacles, 2)
+        fprintf('[X, Y]: %f, %f\n', visibleObstacles(i).x, visibleObstacles(i).y)
+    end
 end

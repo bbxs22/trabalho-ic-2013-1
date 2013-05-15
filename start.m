@@ -21,7 +21,7 @@ function start(robot, obstacles, fis)
         step = step + 1;      
     end
     
-    showStats(robot, obstacles, collision, step);
+    showStats(robot, obstacles, collision, step, getVisibleObstacles(robot, obstacles));
 end
 
 function [degrees] = radtodeg(radians)
