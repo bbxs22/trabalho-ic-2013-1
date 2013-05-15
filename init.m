@@ -9,7 +9,7 @@ function init()
     %collisionsAndSteps(fis);
     %fprintf('\n');
     %collisionsPerNumObstaclesAndSteps(fis);
-    %collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
+    collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
 end
 
 function collisionsFixedObstacles(fis)
@@ -39,8 +39,8 @@ end
 function collisionsAndSteps(fis)
     fprintf('Collisions and Steps\n');
     
-    trials = 10; %numero máximo de simulacoes a serem rodadas
-    samples = 100; %numero de amostras a serem coletadas por simulação
+    trials = 10; %numero maximo de simulacoes a serem rodadas
+    samples = 100; %numero de amostras a serem coletadas por simulacao
     
     stats = initStatistics();
     for i = 1 : trials
@@ -50,7 +50,7 @@ function collisionsAndSteps(fis)
             robot = initRobot(randi([10 90], 1), randi([10 40], 1), random(-pi/2, pi/2), 1);
             trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
         end
-        trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+        trialStats = closeTrialStatistics(trialStats); % calcula a media de colisoes e passos das "samples" amostras
         stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
         
         temp = closeStatistics(stats); % calcula o dp e a media ate o momento
@@ -67,8 +67,8 @@ end
 function collisionsPerNumObstaclesAndSteps(fis)
     fprintf('Collisions Per NumObstacles And Steps\n');
     
-    trials = 10; %numero máximo de simulacoes a serem rodadas
-    samples = 100; %numero de amostras a serem coletadas por simulação
+    trials = 10; %numero maximo de simulacoes a serem rodadas
+    samples = 100; %numero de amostras a serem coletadas por simulacao
     
     for numObstacles = 5 : 1 : 8
         
@@ -88,7 +88,7 @@ function collisionsPerNumObstaclesAndSteps(fis)
                     robot = initRobot(50, 10, 0, v);
                     trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
                 end
-                trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+                trialStats = closeTrialStatistics(trialStats); % calcula a media de colisoes e passos das "samples" amostras
                 stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
                 temp = closeStatistics(stats); % calcula o dp e a media ate o momento
                 
@@ -107,8 +107,8 @@ end
 function collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
     fprintf('Collisions Per NumObstacles And Steps - Random Obstacles\n');
     
-    trials = 10; %numero máximo de simulacoes a serem rodadas
-    samples = 30; %numero de amostras a serem coletadas por simulação
+    trials = 30; %numero maximo de simulacoes a serem rodadas
+    samples = 100; %numero de amostras a serem coletadas por simulacao
     
     for numObstacles = 5 : 1 : 8
 
@@ -121,7 +121,7 @@ function collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
                     robot = initRobot(50, 10, 0, delta);
                     trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
                 end
-                trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+                trialStats = closeTrialStatistics(trialStats); % calcula a media de colisoes e passos das "samples" amostras
                 stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
                 temp = closeStatistics(stats); % calcula o dp e a media ate o momento
                 
