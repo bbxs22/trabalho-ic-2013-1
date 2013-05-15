@@ -3,246 +3,136 @@ function init()
     
     clear all; close all; clc;
     fis = readfis('robot');
-    trials = 300;
+    
+    %collisionsFixedObstacles(fis);
+    %fprintf('\n');
+    %collisionsAndSteps(fis);
+    %fprintf('\n');
+    %collisionsPerNumObstaclesAndSteps(fis);
+    %collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
+end
+
+function collisionsFixedObstacles(fis)
+    fprintf('Collisions with Fixed Obstacles\n');
+    
     initPlot();
-    numObstacles = 5;
-    allObstacles = [];
     
-    for i = 1:trials
-        obstacles = initObstacles(numObstacles);
-        allObstacles = [allObstacles, obstacles];
-    end
+    obstacles = initObstacles(5);
+    obstacles(1).x = 140;
+    obstacles(1).y = 10;
+    obstacles(2).x = 100;
+    obstacles(2).y = 30;
+    obstacles(3).x = 60;
+    obstacles(3).y = 50;
+    obstacles(4).x = 100;
+    obstacles(4).y = 70;
+    obstacles(5).x = 140;
+    obstacles(5).y = 90;
+    plotObstacles(obstacles);
+
+    robot = initRobot(randi([10 30]), randi([10 90]), random(-pi/2, pi/2), 1);
+    plotRobot(robot);
     
-    for v = [0.5 1 2 3]
-        
-        mean.collisionSum = 0;
-        mean.collision = 0;
-        mean.stepsSum = 0;
-        mean.steps = 0;
-        standardDeviation.helper.collision.x2 = 0;
-        standardDeviation.helper.steps.x2 = 0;
-        standardDeviation.collision = 0;
-        standardDeviation.steps = 0;
-        
-        for i = 1:1:trials
-            obstacles = allObstacles((numObstacles * (i - 1) + 1) : numObstacles * i);
-            robot = initRobot(50, 10, 0, v);
-            stats = start(robot, obstacles, fis);
-            mean.collisionSum = mean.collisionSum + stats.collision;
-            mean.stepsSum = mean.stepsSum + stats.steps;
-            standardDeviation.helper.collision.x2 = standardDeviation.helper.collision.x2 + (stats.collision ^ 2);
-            standardDeviation.helper.steps.x2 = standardDeviation.helper.steps.x2 + (stats.steps ^ 2);
+    start(robot, obstacles, fis);
+end
+
+function collisionsAndSteps(fis)
+    fprintf('Collisions and Steps\n');
+    
+    trials = 10; %numero máximo de simulacoes a serem rodadas
+    samples = 100; %numero de amostras a serem coletadas por simulação
+    
+    stats = initStatistics();
+    for i = 1 : trials
+        trialStats = initTrialStatistics();
+        for j = 1 : samples
+            obstacles = initObstacles(5);
+            robot = initRobot(randi([10 90], 1), randi([10 40], 1), random(-pi/2, pi/2), 1);
+            trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
         end
-    
-        stepsTrials = trials - mean.collisionSum;
-        mean.steps = mean.stepsSum / stepsTrials;
-        mean.collision = mean.collisionSum / trials;
-        mean
-
-        % collision
-        standardDeviation.collision = ((mean.collision ^ 2) * trials) + (standardDeviation.helper.collision.x2) - (2 * mean.collision * mean.collisionSum);
-        standardDeviation.collision = sqrt(standardDeviation.collision / (trials - 1));
-
-        % steps
-        standardDeviation.steps = ((mean.steps ^ 2) * stepsTrials) + (standardDeviation.helper.steps.x2) - (2 * mean.steps * mean.stepsSum);
-        standardDeviation.steps = sqrt(standardDeviation.steps / (stepsTrials - 1));
-        standardDeviation
+        trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+        stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
         
-        hold on
-        plot (v, mean.collision, 'x')
-    end
-end
-
-function initPlot()
-    %Inicializa o grafico
-    %Eixo x de 0 a 200
-    %Eixo y de 0 a 100
-    
-    xlim([0 3]);
-    ylim([0 1]);
-end
-
-function [robot] = initRobot(x, y, angle, v)
-    %Inicializa o robo
-    %@param x: posicao inicial do robo no eixo x
-    %@param y: posicao inicial do robo no eixo y
-    %@param angle: angulo inicial de visao do robo (em radianos)
-    %@return o robo
-    
-    robot.start.x = x;
-    robot.start.y = y;
-    robot.start.angle = angle;
-    robot.start.stepX = v;
-    robot.start.stepY = v;
-    
-    robot.x = robot.start.x;
-    robot.y = robot.start.y;
-    robot.radius = 6;
-    robot.angle = robot.start.angle;
-    robot.stepX = robot.start.stepX; %passo dado pelo robo no movimento (x, y)
-    robot.stepY = robot.start.stepY; %passo dado pelo robo no movimento (x, y)
-end
-
-function [obstacles] = initObstacles(total)
-    %Inicializa obstaculos em posicoes aleatorias (definidas por xlim para
-    %eixo x e ylim para eixo y)
-    %@param total: quantidade de obstaculos a serem gerados
-    %@return matriz de obstaculos (1 x total)
-    
-    rangeX = [50, 197];
-    rangeY = [3, 97];
-    
-    %Inicializando a estrutura
-    obstacles(total).x = 0;
-    obstacles(total).y = 0;
-    obstacles(total).radius = 0;
-    
-    %Criando o primeiro par de posicoes
-    obstacles(1).x = randi(rangeX, 1);
-    obstacles(1).y = randi(rangeY, 1);
-    obstacles(1).radius = 3;
-    
-    %Gerando novos x,y sem que colidam com os anteriores
-    for i = 2 : 1 : total
-       collision = true;
-       x = randi([50, 197], 1);
-       y = randi([3, 97], 1);
-       
-       while collision
-           for j = 1 : 1 : i - 1
-               xj = obstacles(j).x;
-               yj = obstacles(j).y;
-               if (xj - 3 <= x) && (x <= xj + 3) && (yj - 3 <= y) && (y <= yj + 3)
-                   x = randi(rangeX, 1);
-                   y = randi(rangeY, 1);
-                   break
-               else
-                  collision = false; 
-               end
-           end
-       end
-       
-       obstacles(i).x = x;
-       obstacles(i).y = y;
-       obstacles(i).radius = 3;
-    end
-end
-
-function [r] = random(min, max)
-    %Geracao de numero real aleatorio entre @min e @max
-    %@param min: valor minimo
-    %@param max: valor maximo
-    %@return valor aleatorio no intervalo [@min, @max]
-    
-    r = min + (max - min) .* rand();
-end
-
-function [stats] = start(robot, obstacles, fis)
-    %Inicia a simulacao
-    %@param robot: o robo
-    
-    collision = false;
-    step = 0;
-    while robot.x < 200
-        if (detectCollision(robot, obstacles))
-            collision = true;
-            break;
-        end
-        
-        phi = robot.angle; % angulo atual do robo
-        yr = robot.y; % yr do robo
-        d = minDistance(robot, getVisibleObstacles(robot, obstacles));
-        teta = evalfis([radtodeg(phi), d, yr], fis); % depende da regra fuzzy
-        robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
-        step = step + 1;
-    end
-    
-    stats.collision = collision;
-    
-    if collision
-        stats.steps = 0;
-    else    
-        stats.steps = step;
-    end;
-end
-
-function [visibleObstacles] = getVisibleObstacles(robot, obstacles) 
-    %Separa os obstaculos visiveis pelo robo
-    %@param robot: o robo
-    %@param obstacles: obstaculos
-    %@return obstaculos visiveis
-    
-    visibleObstacles = [];
-    for i = 1 : 1 : size(obstacles, 2)
-        if obstacles(i).x >= robot.x
-            line1 = [robot.x, robot.y] + robot.radius*[cos(robot.angle + pi/2), sin(robot.angle + pi/2)];
-            line2 = [robot.x, robot.y] + robot.radius*[cos(robot.angle - pi/2), sin(robot.angle - pi/2)];
-            y1 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line1(1) + line1(2);
-            y2 = tan(robot.angle) * obstacles(i).x - tan(robot.angle) * line2(1) + line2(2);
-            
-            % verifica se o obstaculo possui o centro dentro da regiao
-            if min(y1, y2) <= obstacles(i).y && obstacles(i).y <= max(y1, y2)
-                visibleObstacles = cat(2, visibleObstacles, obstacles(i));
-            % verifica se alguma das retas de visao intercepta o obstaculo
-            else
-                if abs(obstacles(i).y - min(y1, y2)) <= obstacles(i).radius || abs(obstacles(i).y - max(y1, y2)) <= obstacles(i).radius
-                    visibleObstacles = cat(2, visibleObstacles, obstacles(i));
-                end
+        temp = closeStatistics(stats); % calcula o dp e a media ate o momento
+        if ((2 * 1.96 * temp.collision.standardDeviation) / sqrt(stats.collision.trials) < 0.1 * temp.collision.mean)
+            if ((2 * 1.96 * temp.steps.standardDeviation) / sqrt(stats.steps.trials) < 0.1 * temp.steps.mean)
+                break
             end
         end
     end
+    stats = closeStatistics(stats);
+    fprintf('Collision: %.4f %.4f   Steps: %.4f %.4f\n', stats.collision.mean, stats.collision.standardDeviation, stats.steps.mean, stats.steps.standardDeviation);
 end
 
-function [degrees] = radtodeg(radians)
-    %Converte um angulo em radianos para graus
-    %@param radians: angulo em radianos
-    %@return angulo em graus
+function collisionsPerNumObstaclesAndSteps(fis)
+    fprintf('Collisions Per NumObstacles And Steps\n');
     
-    degrees = 180 * radians / pi;
+    trials = 10; %numero máximo de simulacoes a serem rodadas
+    samples = 100; %numero de amostras a serem coletadas por simulação
+    
+    for numObstacles = 5 : 1 : 8
+        
+        % gera os obstaculos em posicoes aleatorias
+        allObstacles = [];
+        for i = 1 : (trials*samples)
+            obstacles = initObstacles(numObstacles);
+            allObstacles = [allObstacles, obstacles];
+        end
+
+        for v = [0.5 1 2 3]
+            stats = initStatistics();
+            for i = 1 : trials
+                trialStats = initTrialStatistics();
+                for j = 1 : samples
+                    obstacles = allObstacles((numObstacles * (i*j - 1) + 1) : numObstacles * i*j);
+                    robot = initRobot(50, 10, 0, v);
+                    trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
+                end
+                trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+                stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
+                temp = closeStatistics(stats); % calcula o dp e a media ate o momento
+                
+                if ((2 * 1.96 * temp.collision.standardDeviation) / sqrt(stats.collision.trials) < 0.1 * temp.collision.mean)
+                    if ((2 * 1.96 * temp.steps.standardDeviation) / sqrt(stats.steps.trials) < 0.1 * temp.steps.mean)
+                        break
+                    end
+                end
+            end
+            stats = closeStatistics(stats);
+            fprintf('NumObst.: %d   Veloc.: %.1f   Collision: %.4f %.4f   Steps: %.4f %.4f\n', numObstacles, v, stats.collision.mean, stats.collision.standardDeviation, stats.steps.mean, stats.steps.standardDeviation);
+        end
+    end    
 end
 
-function [radians] = degtorad(degrees)
-    %Converte um angulo em graus para radianos
-    %@param degrees: angulo em graus
-    %@return angulo em radianos
+function collisionsPerNumObstaclesAndStepsRandomObstacles(fis)
+    fprintf('Collisions Per NumObstacles And Steps - Random Obstacles\n');
     
-    radians = degrees * pi / 180;
-end
+    trials = 10; %numero máximo de simulacoes a serem rodadas
+    samples = 30; %numero de amostras a serem coletadas por simulação
+    
+    for numObstacles = 5 : 1 : 8
 
-function [minDistance] = minDistance(robot, obstacles)
-    %Calcula a distancia para o obstaculo mais proximo
-    %@param robot: o robo
-    %@param obstacles: obstaculos que estao no campo de visao do robo
-    %@return a distancia para o obstaculo mais proximo
-    
-    if size(obstacles, 1) == 0
-        minDistance = 200;
-    else
-        distances = calculateDistance(robot, obstacles);
-        minDistance = min(distances);
-    end
-end
-
-function [x] = detectCollision(robot, obstacles)
-    %Determina se houve colisao entre o robo e um conjunto de obstaculos e
-    %entre o robo e a parede
-    %@param robot: o robo
-    %@param obstacles: obstaculos
-    %@return se houve ou nao colisao
-    
-    distances = calculateDistance(robot, obstacles);   
-    distances = distances - ([obstacles(1, :).radius] + robot.radius * ones(1, size(distances, 2)));
-    x = length(find(distances < 0)) >= 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100;
-end
-
-function [distances] = calculateDistance(robot, obstacles)
-    %Calcula a distancia entre o robo e cada um dos obstaculos
-    %@param robot: o robo
-    %@param obstacles: obstaculos
-    %@return vetor coluna com a distancia entre o robo e o obstaculo
-    
-    position = repmat([robot.x robot.y], size(obstacles, 2), 1);
-    obst = [obstacles(1, :).x; obstacles(1, :).y]';
-    aux = (position - obst) .* (position - obst);
-    distances = sqrt(aux(:, 1) + aux(:, 2))';
+        for delta = [1 2 3]
+            stats = initStatistics();
+            for i = 1 : trials
+                trialStats = initTrialStatistics();
+                for j = 1 : samples
+                    obstacles = initObstacles(numObstacles);
+                    robot = initRobot(50, 10, 0, delta);
+                    trialStats = addTrialStatistics(trialStats, start(robot, obstacles, fis));
+                end
+                trialStats = closeTrialStatistics(trialStats); % calcula a média de colisões e passos das "samples" amostras
+                stats = addStatistics(stats, trialStats); % calcula a soma dos x^2 e dos x
+                temp = closeStatistics(stats); % calcula o dp e a media ate o momento
+                
+                if ((2 * 1.96 * temp.collision.standardDeviation) / sqrt(stats.collision.trials) < 0.1 * temp.collision.mean)
+                    if ((2 * 1.96 * temp.steps.standardDeviation) / sqrt(stats.steps.trials) < 0.1 * temp.steps.mean)
+                        break
+                    end
+                end
+            end
+            stats = closeStatistics(stats);
+            fprintf('NumObst.: %d   Delta.: %.1f   Collision: %.4f %.4f   Steps: %.4f %.4f\n', numObstacles, delta, stats.collision.mean, stats.collision.standardDeviation, stats.steps.mean, stats.steps.standardDeviation);
+        end
+    end    
 end
