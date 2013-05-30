@@ -8,4 +8,10 @@ function [robot] = moveRobot(robot, newAngle)
     robot.x = newPosition(1);
     robot.y = newPosition(2);
     robot.angle = newAngle;
+    
+    if (robot.angle < -pi)
+        robot.angle = 2 * pi + robot.angle;
+    elseif (robot.angle > pi)
+        robot.angle = 2 * pi - robot.angle;
+    end
 end
