@@ -13,7 +13,9 @@ function y = fitness(x)
         fis.rule(i).consequent = floor(x(i));
     end
 
-    y = initSimulation(fis);
+    [s c] = initSimulation(fis);
+    
+    y = c;
     %disp(x)
     %sprintf('Fitness: %.4f', y)
 end

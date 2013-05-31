@@ -1,14 +1,16 @@
-function [collisions] = initSimulation(fis)
-    collisions = collisionsFixedObstacles(fis);
+function [steps collisions] = initSimulation(fis)
+    [steps collisions] = collisionsFixedObstacles(fis);
 end
 
-function [mean] = collisionsFixedObstacles(fis)
+function [meanS, meanC] = collisionsFixedObstacles(fis)
     obstacles = initObstacles();
     %initPlot();
     %plotObstacles(obstacles);
     
-    total = 0;
+    totalC = 0;
     collisions = 0;
+    totalS = 0;
+    steps = 0;
     for x = 10 : 10 : 50
         for y = 10 : 10 : 90
             for angle = -pi/2 : pi/3 : pi/2
@@ -17,10 +19,15 @@ function [mean] = collisionsFixedObstacles(fis)
                 %plotRobot(robot);
                 stats = start(robot, obstacles, fis);
                 collisions = collisions + stats.collision;
-                total = total + 1;
+                totalC = totalC + 1;
+                if ~stats.collision
+                    steps = steps + stats.steps;
+                    totalS = totalS + 1;
+                end
             end
         end
     end
     
-    mean = collisions / total;
+    meanS = steps / totalS;
+    meanC = collisions / totalC;
 end
