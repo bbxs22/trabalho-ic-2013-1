@@ -4,7 +4,7 @@ function [stats] = start(robot, obstacles, fis)
     
     collision = false;
     step = 0;
-    while robot.x < 200
+    while robot.x < 200 && step < 1000
         if (detectCollision(robot, obstacles))
             collision = true;
             break;
@@ -15,16 +15,23 @@ function [stats] = start(robot, obstacles, fis)
         d = minDistance(robot, getVisibleObstacles(robot, obstacles));
         teta = evalfis([radtodeg(phi), d, yr], fis); % depende da regra fuzzy
         robot = moveRobot(robot, phi + degtorad(teta)); % movimenta o robo
-        step = step + 1;        
+        %plotRobot(robot);
+        step = step + 1;
     end
     
+    if (step == 1000)
+        collision = true;
+    end
+        
     stats.collision = collision;
     
     if collision
         stats.steps = 0;
     else    
         stats.steps = step;
-    end;
+    end
+    
+    %plotRobot(robot);
 end
 
 function [degrees] = radtodeg(radians)
@@ -66,7 +73,7 @@ function [x] = detectCollision(robot, obstacles)
     
     distances = calculateDistance(robot, obstacles);   
     distances = distances - ([obstacles(1, :).radius] + robot.radius * ones(1, size(distances, 2)));
-    x = length(find(distances < 0)) >= 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100;
+    x = length(find(distances < 0)) >= 1 || robot.y - robot.radius < 0 || robot.y + robot.radius > 100 || robot.x - robot.radius < 0;
 end
 
 function [distances] = calculateDistance(robot, obstacles)
